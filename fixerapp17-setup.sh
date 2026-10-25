@@ -7,14 +7,14 @@
 #   ██      ██ ██   ██ ███████ ██   ██  ██████
 #
 #       SERVER & PROXY MANAGEMENT SYSTEM
-#           Version: 1.2 — FixerApp17
+#           Version: 1.3 — FixerApp17
 #           ⚠️ Don't Abuse This Script
 # ==================================================
 
 clear
 echo ""
 echo "╔══════════════════════════════════════════════════════════╗"
-echo "║           🔥 FIXERAPP17 — SERVER & PROXY v1.2             ║"
+echo "║           🔥 FIXERAPP17 — SERVER & PROXY v1.3             ║"
 echo "║       SSH • WS • SSL • Squid • OpenVPN • Users            ║"
 echo "║               ⚠️ Don't Abuse This Script                  ║"
 echo "╚══════════════════════════════════════════════════════════╝"
@@ -35,7 +35,7 @@ echo "📦 [1/8] Nag-u-update ng system..."
 apt update && apt upgrade -y
 
 echo "🔧 Nag-i-install ng mga kailangang packages..."
-apt install -y openssh-server nginx certbot python3-certbot-nginx squid ufw curl wget nano openvpn easy-rsa
+apt install -y openssh-server nginx certbot python3-certbot-nginx squid ufw curl wget nano openvpn easy-rsa python3
 
 # ==================================================
 # STEP 2 — SSH SERVER
@@ -54,9 +54,9 @@ ufw allow 80/tcp    # HTTP / WS
 ufw allow 443/tcp   # HTTPS / WSS
 ufw allow 3128/tcp  # Squid Proxy
 ufw allow 8080/tcp  # Squid Proxy
-ufw allow 8000/tcp  # Squid Proxy
-ufw allow 110/udp   # OpenVPN UDP (Port 110)
-ufw allow 1194/tcp  # OpenVPN TCP (Port 1194)
+ufw allow 8000/tcp  # HTTP Download Server ✅
+ufw allow 110/udp   # OpenVPN UDP
+ufw allow 1194/tcp  # OpenVPN TCP
 ufw --force enable
 echo "   ✅ Ports Bukas: 22, 80, 443, 3128, 8080, 8000, 110(UDP), 1194(TCP)"
 
@@ -296,11 +296,17 @@ echo "✅ MGA .OVPN FILE — I-DOWNLOAD ANG DALAWANG ITO:"
 echo "===================================================="
 echo "🟢 UDP:   ${CLIENT_DIR}/fixerapp17-udp.ovpn  (Port 110)"
 echo "🔵 TCP:   ${CLIENT_DIR}/fixerapp17-tcp.ovpn  (Port 1194)"
+echo ""
+echo "🌐 DOWNLOAD LINKS (HTTP METHOD):"
 echo "===================================================="
-echo "💡 Paano i-download:"
-echo "   1. SFTP/SCP: scp root@$SERVER_IP:$CLIENT_DIR/* ~/"
-echo "   2. File Manager: kopyahin at i-send sa Telegram/Email"
-echo "   3. Nano: nano $CLIENT_DIR/fixerapp17-udp.ovpn → copy all → save sa phone"
+echo "📌 Buksan muna ang HTTP Server — i-type ito sa terminal:"
+echo "   cd $CLIENT_DIR && python3 -m http.server 8000"
+echo ""
+echo "📌 Pagkatapos buksan sa browser ang mga link na ito:"
+echo "   🟢 UDP Download:  http://$SERVER_IP:8000/fixerapp17-udp.ovpn"
+echo "   🔵 TCP Download:  http://$SERVER_IP:8000/fixerapp17-tcp.ovpn"
+echo ""
+echo "⚠️  PAGKA-DOWNLOAD MO NA — PINDUTIN ANG: Ctrl+C para patayin ang server!"
 echo "===================================================="
 
 # ==================================================
@@ -343,8 +349,14 @@ echo "🌐 SSH + WS         → Port 80, Path: /ssh-ws"
 echo "🔒 SSH + SSL + WS   → Port 443, Path: /ssh-ssl-ws (kailangan domain)"
 echo "🌍 SQUID PROXY      → Port 3128, 8080, 8000"
 echo "🔐 OPENVPN          → UDP: 110, TCP: 1194"
-echo "   📂 UDP File: $CLIENT_DIR/fixerapp17-udp.ovpn  (Port 110)"
-echo "   📂 TCP File: $CLIENT_DIR/fixerapp17-tcp.ovpn  (Port 1194)"
+echo ""
+echo "📥 TO DOWNLOAD .OVPN FILES:"
+echo "═══════════════════════════════════════════════════════════"
+echo "   1️⃣ I-type ito sa terminal: cd $CLIENT_DIR && python3 -m http.server 8000"
+echo "   2️⃣ Buksan sa browser:"
+echo "      🟢 UDP File:  http://$SERVER_IP:8000/fixerapp17-udp.ovpn"
+echo "      🔵 TCP File:  http://$SERVER_IP:8000/fixerapp17-tcp.ovpn"
+echo "   3️⃣ ⚠️  PAGKA-DOWNLOAD → Pindutin Ctrl+C para patayin ang server!"
 echo "═══════════════════════════════════════════════════════════"
 echo ""
 
@@ -364,9 +376,9 @@ while true; do
     echo "║  4. Palitan ang Password     9. View Access Logs          ║"
     echo "║                                                           ║"
     echo "║  🔐 OPENVPN                  ⚙️ SYSTEM                     ║"
-    echo "║  A. Bagong Client File       5. Setup SSL Certificate     ║"
-    echo "║  B. Listahan ng Files        F. Full Connection Info      ║"
-    echo "║                              0. Exit                       ║"
+    echo "║  A. Bagong Client File       F. Full Connection Info      ║"
+    echo "║  B. Listahan ng Files        0. Exit                       ║"
+    echo "║  D. Start Download Server                                   ║"
     echo "╚══════════════════════════════════════════════════════════╝"
     read -p "👉 Piliin ang numero: " choice
     
@@ -446,11 +458,20 @@ while true; do
             read -p "🔐 Pangalan ng Client: " cname
             generate_ovpn "$cname" "udp"
             generate_ovpn "$cname" "tcp"
+            SERVER_IP=$(curl -s ifconfig.me)
             echo ""
             echo "✅ TAPOS NA! Dalawang file ang nagawa:"
             echo "🟢 UDP:   $CLIENT_DIR/${cname}-udp.ovpn  (Port 110)"
             echo "🔵 TCP:   $CLIENT_DIR/${cname}-tcp.ovpn  (Port 1194)"
             echo ""
+            echo "🌐 DOWNLOAD LINKS:"
+            echo "===================================================="
+            echo "📌 I-type ito sa terminal: cd $CLIENT_DIR && python3 -m http.server 8000"
+            echo "📌 Pagkatapos buksan sa browser:"
+            echo "   🟢 UDP Download:  http://$SERVER_IP:8000/${cname}-udp.ovpn"
+            echo "   🔵 TCP Download:  http://$SERVER_IP:8000/${cname}-tcp.ovpn"
+            echo "⚠️  PAGKA-DOWNLOAD → Pindutin Ctrl+C para patayin ang server!"
+            echo "===================================================="
             ;;
         B|b)
             echo ""
@@ -460,6 +481,19 @@ while true; do
             echo "────────────────────────────"
             echo "📂 Lokasyon: $CLIENT_DIR/"
             echo ""
+            ;;
+        D|d)
+            echo ""
+            SERVER_IP=$(curl -s ifconfig.me)
+            echo "🌐 NAGBUBUKAS NG DOWNLOAD SERVER..."
+            echo "===================================================="
+            echo "📌 Buksan sa browser ang mga link na ito:"
+            echo "   🟢 UDP Download:  http://$SERVER_IP:8000/fixerapp17-udp.ovpn"
+            echo "   🔵 TCP Download:  http://$SERVER_IP:8000/fixerapp17-tcp.ovpn"
+            echo ""
+            echo "⚠️  PAGKA-DOWNLOAD MO NA — PINDUTIN ANG: Ctrl+C"
+            echo "===================================================="
+            cd $CLIENT_DIR && python3 -m http.server 8000
             ;;
         F|f)
             echo ""
@@ -487,24 +521,14 @@ while true; do
             echo "║     UDP: $ip:110  📂 $CLIENT_DIR/fixerapp17-udp.ovpn    ║"
             echo "║     TCP: $ip:1194  📂 $CLIENT_DIR/fixerapp17-tcp.ovpn    ║"
             echo "╠══════════════════════════════════════════════════════════╣"
+            echo "║  📥 DOWNLOAD .OVPN VIA HTTP:                               ║"
+            echo "║     🔗 UDP File:  http://$ip:8000/fixerapp17-udp.ovpn    ║"
+            echo "║     🔗 TCP File:  http://$ip:8000/fixerapp17-tcp.ovpn    ║"
+            echo "║     ⚠️ Piliin Menu D para simulan ang download server      ║"
+            echo "╠══════════════════════════════════════════════════════════╣"
             echo "║  📂 FILE LOCATIONS:                                        ║"
             echo "║     Squid Rules:    /etc/squid/conf.d/fixerapp17-rules.conf ║"
             echo "║     Blocked Sites:  /etc/squid/fixerapp17-blocked.txt      ║"
             echo "║     SSH Config:     /etc/ssh/sshd_config                   ║"
             echo "║     Nginx Config:   /etc/nginx/sites-available/            ║"
-            echo "║     OpenVPN Files:  $CLIENT_DIR/                           ║"
-            echo "╚══════════════════════════════════════════════════════════╝"
-            ;;
-        0)
-            echo ""
-            echo "╔══════════════════════════════════════════════════════════╗"
-            echo "║             👋 Salamat sa paggamit ng FIXERAPP17 Script 😊!          ║"
-            echo "║           ⚠️ Again Don't Abuse This Script                ║"
-            echo "╚══════════════════════════════════════════════════════════╝"
-            exit 0
-            ;;
-        *)
-            echo "❌ Mali ang napili. Subukan ulit."
-            ;;
-    esac
-done
+  
