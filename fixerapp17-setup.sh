@@ -7,14 +7,14 @@
 #   ██      ██ ██   ██ ███████ ██   ██  ██████
 #
 #       SERVER & PROXY MANAGEMENT SYSTEM
-#           Version: 1.1 — FixerApp17
+#           Version: 1.2 — FixerApp17
 #           ⚠️ Don't Abuse This Script
 # ==================================================
 
 clear
 echo ""
 echo "╔══════════════════════════════════════════════════════════╗"
-echo "║           🔥 FIXERAPP17 — SERVER & PROXY v1.1             ║"
+echo "║           🔥 FIXERAPP17 — SERVER & PROXY v1.2             ║"
 echo "║       SSH • WS • SSL • Squid • OpenVPN • Users            ║"
 echo "║               ⚠️ Don't Abuse This Script                  ║"
 echo "╚══════════════════════════════════════════════════════════╝"
@@ -55,10 +55,10 @@ ufw allow 443/tcp   # HTTPS / WSS
 ufw allow 3128/tcp  # Squid Proxy
 ufw allow 8080/tcp  # Squid Proxy
 ufw allow 8000/tcp  # Squid Proxy
-ufw allow 1194/udp  # OpenVPN UDP
-ufw allow 1194/tcp  # OpenVPN TCP
+ufw allow 110/udp   # OpenVPN UDP (Port 110)
+ufw allow 1194/tcp  # OpenVPN TCP (Port 1194)
 ufw --force enable
-echo "   ✅ Ports Bukas: 22, 80, 443, 3128, 8080, 8000, 1194(UDP+TCP)"
+echo "   ✅ Ports Bukas: 22, 80, 443, 3128, 8080, 8000, 110(UDP), 1194(TCP)"
 
 # ==================================================
 # STEP 4 — NGINX WEBSOCKET TUNNELS
@@ -157,9 +157,9 @@ systemctl restart squid
 echo "   ✅ Squid Proxy: Port 3128, 8080, 8000 — Naka-ON"
 
 # ==================================================
-# STEP 6 — OPENVPN SERVER (UDP + TCP)
+# STEP 6 — OPENVPN SERVER (UDP:110 + TCP:1194)
 # ==================================================
-echo "🔐 [6/8] Nagse-setup ng OpenVPN Server (UDP + TCP)..."
+echo "🔐 [6/8] Nagse-setup ng OpenVPN Server (UDP:110 + TCP:1194)..."
 
 EASYRSA_DIR="/etc/openvpn/easy-rsa"
 CLIENT_DIR="/etc/openvpn/clients"
@@ -187,9 +187,9 @@ cp pki/private/server.key /etc/openvpn/ 2>/dev/null
 cp pki/dh.pem /etc/openvpn/ 2>/dev/null
 cp pki/ta.key /etc/openvpn/ 2>/dev/null
 
-# UDP Config
+# UDP Config — PORT 110
 cat > /etc/openvpn/server-udp.conf << EOF
-port 1194
+port 110
 proto udp
 dev tun
 ca ca.crt
@@ -210,7 +210,7 @@ status openvpn-status-udp.log
 verb 3
 EOF
 
-# TCP Config
+# TCP Config — PORT 1194
 cat > /etc/openvpn/server-tcp.conf << EOF
 port 1194
 proto tcp
@@ -236,7 +236,7 @@ EOF
 systemctl enable --now openvpn-server@server-udp
 systemctl enable --now openvpn-server@server-tcp
 
-systemctl is-active --quiet openvpn-server@server-udp && echo "   ✅ OpenVPN UDP: Port 1194 — Naka-ON"
+systemctl is-active --quiet openvpn-server@server-udp && echo "   ✅ OpenVPN UDP: Port 110 — Naka-ON"
 systemctl is-active --quiet openvpn-server@server-tcp && echo "   ✅ OpenVPN TCP: Port 1194 — Naka-ON"
 
 # Function: Generate .ovpn file
@@ -248,11 +248,19 @@ generate_ovpn() {
         ./easyrsa gen-req $NAME nopass
         ./easyrsa sign-req client $NAME
     fi
+    
+    # Itakda ang tamang port bawat protocol
+    if [ "$PROTO" = "udp" ]; then
+        local PORT=110
+    else
+        local PORT=1194
+    fi
+    
     cat > ${CLIENT_DIR}/${NAME}-${PROTO}.ovpn << OVPN
 client
 dev tun
 proto $PROTO
-remote $SERVER_IP 1194
+remote $SERVER_IP $PORT
 resolv-retry infinite
 nobind
 persist-key
@@ -286,8 +294,8 @@ echo ""
 echo "📂 ==================================================="
 echo "✅ MGA .OVPN FILE — I-DOWNLOAD ANG DALAWANG ITO:"
 echo "===================================================="
-echo "🟢 UDP:   ${CLIENT_DIR}/fixerapp17-udp.ovpn"
-echo "🔵 TCP:   ${CLIENT_DIR}/fixerapp17-tcp.ovpn"
+echo "🟢 UDP:   ${CLIENT_DIR}/fixerapp17-udp.ovpn  (Port 110)"
+echo "🔵 TCP:   ${CLIENT_DIR}/fixerapp17-tcp.ovpn  (Port 1194)"
 echo "===================================================="
 echo "💡 Paano i-download:"
 echo "   1. SFTP/SCP: scp root@$SERVER_IP:$CLIENT_DIR/* ~/"
@@ -334,9 +342,9 @@ echo "🔌 SSH DIRECT       → Port 22"
 echo "🌐 SSH + WS         → Port 80, Path: /ssh-ws"
 echo "🔒 SSH + SSL + WS   → Port 443, Path: /ssh-ssl-ws (kailangan domain)"
 echo "🌍 SQUID PROXY      → Port 3128, 8080, 8000"
-echo "🔐 OPENVPN          → Port 1194 UDP + TCP"
-echo "   📂 UDP File: $CLIENT_DIR/fixerapp17-udp.ovpn"
-echo "   📂 TCP File: $CLIENT_DIR/fixerapp17-tcp.ovpn"
+echo "🔐 OPENVPN          → UDP: 110, TCP: 1194"
+echo "   📂 UDP File: $CLIENT_DIR/fixerapp17-udp.ovpn  (Port 110)"
+echo "   📂 TCP File: $CLIENT_DIR/fixerapp17-tcp.ovpn  (Port 1194)"
 echo "═══════════════════════════════════════════════════════════"
 echo ""
 
@@ -440,8 +448,8 @@ while true; do
             generate_ovpn "$cname" "tcp"
             echo ""
             echo "✅ TAPOS NA! Dalawang file ang nagawa:"
-            echo "🟢 UDP:   $CLIENT_DIR/${cname}-udp.ovpn"
-            echo "🔵 TCP:   $CLIENT_DIR/${cname}-tcp.ovpn"
+            echo "🟢 UDP:   $CLIENT_DIR/${cname}-udp.ovpn  (Port 110)"
+            echo "🔵 TCP:   $CLIENT_DIR/${cname}-tcp.ovpn  (Port 1194)"
             echo ""
             ;;
         B|b)
@@ -476,7 +484,7 @@ while true; do
             echo "║     IP: $ip   Port: 3128, 8080, 8000                       ║"
             echo "╠══════════════════════════════════════════════════════════╣"
             echo "║  🔐 OPENVPN                                                ║"
-            echo "║     UDP: $ip:1194  📂 $CLIENT_DIR/fixerapp17-udp.ovpn    ║"
+            echo "║     UDP: $ip:110  📂 $CLIENT_DIR/fixerapp17-udp.ovpn    ║"
             echo "║     TCP: $ip:1194  📂 $CLIENT_DIR/fixerapp17-tcp.ovpn    ║"
             echo "╠══════════════════════════════════════════════════════════╣"
             echo "║  📂 FILE LOCATIONS:                                        ║"
