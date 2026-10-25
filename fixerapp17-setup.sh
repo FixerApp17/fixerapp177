@@ -488,4 +488,25 @@
              echo "║     🔗 UDP File:  http://$ip:8000/fixerapp17-udp.ovpn    ║"
              echo "║     🔗 TCP File:  http://$ip:8000/fixerapp17-tcp.ovpn    ║"
              echo "║     ⚠️ Piliin Menu D para simulan ang download server      ║"
-             echo "╠═════════════════════
+             echo "╠══════════════════════════════════════════════════════════╣"
+             echo "║  📂 FILE LOCATIONS:                                        ║"
+             echo "║     Squid Rules:    /etc/squid/conf.d/fixerapp17-rules.conf ║"
+             echo "║     Blocked Sites:  /etc/squid/fixerapp17-blocked.txt      ║"
+             echo "║     SSH Config:     /etc/ssh/sshd_config                   ║"
+             echo "║     Nginx Config:   /etc/nginx/sites-available/            ║"
+             echo "║     OpenVPN Files:  $CLIENT_DIR/                           ║"
+             echo "╚══════════════════════════════════════════════════════════╝"
+             ;;
+         0)
+             echo ""
+             echo "╔══════════════════════════════════════════════════════════╗"
+             echo "║             👋 Salamat sa paggamit ng FIXERAPP17 😊!       ║"
+             echo "║           ⚠️ Again Don't Abuse This Script                ║"
+             echo "╚══════════════════════════════════════════════════════════╝"
+             exit 0
+             ;;
+         *)
+             echo "❌ Mali ang napili. Subukan ulit."
+             ;;
+     esac
+ done
