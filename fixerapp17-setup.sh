@@ -53,8 +53,10 @@ ufw allow 22/tcp    # SSH
 ufw allow 80/tcp    # HTTP / WS
 ufw allow 443/tcp   # HTTPS / WSS
 ufw allow 3128/tcp  # Squid Proxy
+ufw allow 8080/tcp  # Squid Proxy
+ufw allow 8000/tcp  # Squid Proxy
 ufw --force enable
-echo "   ✅ Ports Bukas: 22, 80, 443, 3128"
+echo "   ✅ Ports Bukas: 22, 80, 443, 3128, 8080, 8000"
 
 # ==================================================
 # STEP 4 — NGINX WEBSOCKET TUNNELS
@@ -128,6 +130,8 @@ cat > /etc/squid/conf.d/fixerapp17-rules.conf << 'EOF'
 # ==========================================
 
 http_port 3128
+http_port 8080
+http_port 8000
 
 acl all src all
 acl localnet src 10.0.0.0/8
@@ -148,10 +152,10 @@ EOF
 touch /etc/squid/fixerapp17-blocked.txt
 systemctl enable --now squid
 systemctl restart squid
-echo "   ✅ Squid Proxy: Port 3128 — Naka-ON"
+echo "   ✅ Squid Proxy: Port 3128, 8080, 8000 — Naka-ON"
 
 # ==================================================
-# STEP 6 — ✅ BANNER MESSAGE + COMPLETE
+# STEP 6 — BANNER MESSAGE + COMPLETE
 # ==================================================
 echo ""
 echo "╔══════════════════════════════════════════════════════════╗"
@@ -188,7 +192,7 @@ echo "════════════════════════�
 echo "🔌 SSH DIRECT       → Port 22"
 echo "🌐 SSH + WS         → Port 80, Path: /ssh-ws"
 echo "🔒 SSH + SSL + WS   → Port 443, Path: /ssh-ssl-ws (kailangan domain)"
-echo "🌍 SQUID PROXY      → Port 3128"
+echo "🌍 SQUID PROXY      → Port 3128, 8080, 8000"
 echo "═══════════════════════════════════════════════════════════"
 echo ""
 
@@ -304,7 +308,7 @@ while true; do
             echo "║     ⚠️ Kailangan ng sariling domain — Piliin Menu #5       ║"
             echo "╠══════════════════════════════════════════════════════════╣"
             echo "║  🌍 SQUID PROXY                                            ║"
-            echo "║     IP: $ip   Port: 3128                                   ║"
+            echo "║     IP: $ip   Port: 3128, 8080, 8000                       ║"
             echo "╠══════════════════════════════════════════════════════════╣"
             echo "║  📂 FILE LOCATIONS:                                        ║"
             echo "║     Squid Rules:    /etc/squid/conf.d/fixerapp17-rules.conf ║"
